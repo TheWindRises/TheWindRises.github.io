@@ -15,6 +15,13 @@
 
 
 
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-bounce.min.css?v=1.0.2" rel="stylesheet">
+
 
 
 
@@ -219,6 +226,154 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts-expand">
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/23/为什么要在主线程中刷新UI/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="周春鑫">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="知否，知否">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/01/23/为什么要在主线程中刷新UI/" itemprop="url">为什么要在主线程中刷新UI</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-23T14:01:44+08:00">
+                2019-01-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="先从一个面试题开始"><a href="#先从一个面试题开始" class="headerlink" title="先从一个面试题开始"></a>先从一个面试题开始</h4><p>请问下面代码有什么问题么？</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)viewDidLoad &#123;</span><br><span class="line">[<span class="keyword">super</span> viewDidLoad];</span><br><span class="line"><span class="built_in">UILabel</span> *alertLabel = [[<span class="built_in">UILabel</span> alloc] initWithFrame:<span class="built_in">CGRectMake</span>(<span class="number">100</span>, <span class="number">100</span>, <span class="number">100</span>, <span class="number">100</span>)];</span><br><span class="line">alertLabel.text = <span class="string">@"Wait 4 second..."</span>;</span><br><span class="line">[<span class="keyword">self</span>.view addSubview:alertLabel];</span><br><span class="line"></span><br><span class="line"><span class="built_in">NSOperationQueue</span> *backgroundQueue = [[<span class="built_in">NSOperationQueue</span> alloc] init];</span><br><span class="line">[backgroundQueue addOperationWithBlock:^&#123;</span><br><span class="line">[<span class="built_in">NSThread</span> sleepUntilDate:[<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">4</span>]];</span><br><span class="line">alertLabel.text = <span class="string">@"Ready to go!"</span>;</span><br><span class="line">&#125;];</span><br><span class="line"><span class="comment">// Do any additional setup after loading the view, typically from a nib.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>肯定是有问题的，在等了4s以后，alertLabel并不会更新。在我们写完代码以后，都会提示如下的信息：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1fzghs48banj316k07swgd.jpg" alt=""></p>
+<p>提示must be used from main thread only,对于iOS开发者来说，刷新页面必须在主线程中进行。</p>
+<p>我们可以进行如下修改：</p>
+<figure class="highlight objectivec"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)viewDidLoad &#123;</span><br><span class="line">[<span class="keyword">super</span> viewDidLoad];</span><br><span class="line"><span class="built_in">UILabel</span> *alertLabel = [[<span class="built_in">UILabel</span> alloc] initWithFrame:<span class="built_in">CGRectMake</span>(<span class="number">100</span>, <span class="number">100</span>, <span class="number">100</span>, <span class="number">100</span>)];</span><br><span class="line">alertLabel.text = <span class="string">@"Wait 4 second..."</span>;</span><br><span class="line">[<span class="keyword">self</span>.view addSubview:alertLabel];</span><br><span class="line"></span><br><span class="line"><span class="built_in">NSOperationQueue</span> *backgroundQueue = [[<span class="built_in">NSOperationQueue</span> alloc] init];</span><br><span class="line">[backgroundQueue addOperationWithBlock:^&#123;</span><br><span class="line">[<span class="built_in">NSThread</span> sleepUntilDate:[<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">4</span>]];</span><br><span class="line">[[<span class="built_in">NSOperationQueue</span> mainQueue] addOperationWithBlock:^&#123;</span><br><span class="line">alertLabel.text = <span class="string">@"Ready to go!"</span>;</span><br><span class="line">&#125;];</span><br><span class="line">&#125;];</span><br><span class="line"><span class="comment">// Do any additional setup after loading the view, typically from a nib.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="为什么必须在主线程中刷新UI呢？"><a href="#为什么必须在主线程中刷新UI呢？" class="headerlink" title="为什么必须在主线程中刷新UI呢？"></a>为什么必须在主线程中刷新UI呢？</h4><p>如果用一句话来概括，可以这样去阐述：</p>
+<blockquote>
+<p>UIKit并不是一个<strong>线程安全</strong>的类，UI操作涉及到渲染访问各种View对象的属性，如果异步操作下会存在读写问题，而为其加锁则会耗费大量资源并拖慢运行速度。另一方面因为整个程序的起点UIApplication是在主线程进行初始化，所有的用户事件都是在主线程上进行传递（如点击、拖动），所以view只能在主线程上才能对事件进行响应。而在渲染方面由于图像的渲染需要以60帧的刷新率在屏幕上 同时 更新，在非主线程异步化的情况下无法确定这个处理过程能够实现同步更新。</p>
+</blockquote>
+<p>我们可以看到，最重要的一点就是UIKit并不是一个线程安全的类。</p>
+<hr>
+<h5 id="从UIKit线程不安全说起"><a href="#从UIKit线程不安全说起" class="headerlink" title="从UIKit线程不安全说起"></a>从UIKit线程不安全说起</h5><blockquote>
+<p>什么是线程安全呢？</p>
+<blockquote>
+<p><strong>线程安全</strong>是多线程编程时的计算机程序代码中的一个概念。在拥有共享数据的多条线程并行执行的程序中，线程安全的代码会通过同步机制保证各个线程都可以正常且正确的执行，不会出现数据污染等意外情况。</p>
+</blockquote>
+</blockquote>
+<p>在UIKit中，很多类中大部分的属性都被修饰为nonatomic,这是为什么呢。虽然默认的属性都是atomic(原子性)的，意味着对于该属性进行读写操作时候会加锁，确保在多线程环境下，任何一个线程对该属性的读写都是”完整的“，读写进行期间都不会被其他的线程干涉。由于使用了锁的机制，atomic会造成性能损耗，<strong>降低读写效率</strong>。另外需要强调的是，atomic并<strong>不等于线程安全</strong>。例如，两个自线程A和B，A线程需要连续多次读取某一个属性的值，而同时B线程又在修改这个属性的值，那么就不能保证A线程多次读取的属性值是相同的。与atomic相对的是nonatomic,虽然不保证属性读写的原子性，但是提高了读写的效率，在实际开发中，一般并不要求属性读写的原子性，因为这并不能保证线程安全，所以大多数情况下都使用nonatomic。这意味着它们不能在多线程的环境下工作，而对于UIKit这样一个庞大的框架，将所有的属性都设计为线程安全显然是不现实的，涉及到很多的方便：</p>
+<ul>
+<li><p>假设能够异步设置view的属性，那我们究竟是希望这些改动能够同时生效，还是按照各自runloop的进度去改变这个view的属性呢？</p>
+</li>
+<li><p>假设UITableView在其他线程去移除了一个cell，而在另一个线程却对这个cell所在的index进行一些操作，这时候可能就会引发crash。</p>
+</li>
+<li><p>如果在后台线程移除了一个view，这个时候runloop周期还没有完结，用户在主线程点击了这个“将要”消失的view，那么究竟该不该响应事件？在哪条线程进行响应？</p>
+</li>
+</ul>
+<p>仔细思考，多线程处理UI并没有给我们的开发带来任何的便利，加入我们的方法进行处理的话，我们很容易用多线程的知识去解决，“用一个串行队列对这些事件进行处理就可以了。“所以对于苹果来说，UIKit的所有的操作都放在了主线程串行执行。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
     
       
 
@@ -519,7 +674,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-count">3</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -570,15 +725,18 @@
 </div>
 
 
-  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
 
 
 
-  <span class="post-meta-divider">|</span>
+  <span class="post-meta-divider">成功不是凭梦想和希望，而是凭努力和实践</span>
+	<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">博客全站共2.9k字</span>
+  </div>
 
 
 
-  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
 
 
 
@@ -605,7 +763,7 @@
     
 
   </div>
- <!--   -->
+ <!--  undefined -->
 
   
 
@@ -742,7 +900,8 @@
 
   
 
+	<script type="text/javascript" src="/js/src/love.js"></script>
  <script type="text/javascript" color="0,0,255" opacity="0.7" zindex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
-</body>
+<script src="/live2dw/lib/L2Dwidget.min.js?0c58a1486de42ac6cc1c59c7d98ae887"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"log":false});</script></body>
 
 </html>
